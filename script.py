@@ -61,9 +61,9 @@ def valuetopos(value):
     return piece[value]["position"]
 
 def updatedico(pini,pfin):
-    piece=postovalue(pini)
-    piece[piece]["position"] = pfin
-    piece[piece]["moved?"] = True
+    p=postovalue(pini)
+    piece[p]["position"] = pfin
+    piece[p]["moved?"] = True
 
 def wichside(pini,pfin):                     #8 cas differend   hg h hd
     if pini[0]==pfin[0] and pini[1]<pfin[1]: # meme ligne        g P  d
@@ -89,7 +89,10 @@ def verif(pos):# renvoie True si le mouv est impossible
     elif nottour in game[pos[0]][pos[1]]: return False
     else: return True
 
-
+def mouv(pini,pfin,n,piece):
+    updatedico(pini,pfin)
+    game[pini[0]][pini[1]]="" # on enleve la piece
+    game[pfin[0]][pfin[1]]=tour+piece+str(n) # on remet la piece
 
 def mouvtour(pini,pfin,n):
     side = wichside(pini,pfin) # detection du cote
@@ -125,9 +128,7 @@ def mouvtour(pini,pfin,n):
             print(str(i)+" , " + str(pini[0]) + " Illegal")            
             return False
 
-    updatedico(pini,pfin)
-    game[pini[0]][pini[1]]="" # on enleve la piece
-    game[pfin[0]][pfin[1]]=tour+"t"+str(n) # on remet la piece
+    mouv(pini,pfin,n,"t")
     return True
 
 def mouvcavalier(pini,pfin,n):
@@ -193,9 +194,127 @@ def mouvfou(pini,pfin,n):
                     continue
                 print(str(i)+" , " + str(k) + " Illegal")
 
-    updatedico(pini,pfin)
-    game[pini[0]][pini[1]]="" # on enleve la piece
-    game[pfin[0]][pfin[1]]=tour+"f"+str(n) # on remet la piece
+    mouv(pini,pfin,n,"f")
+    return True
+
+def mouvpion(pini,pfin,n):
+
+    if ((pini[1]+1==pfin[1] and pini[0]+1==pfin[0]) or (pini[1]-1==pfin[1] and pini[0]+1==pfin[0])) and (nottour in postovalue(pfin)):
+        print("mange la piece en diagonale")
+        mouv(pini,pfin,n,"p")
+        return True
+    if pini[0]+1==pfin[0] and pini[1]==pfin[1]:
+        print("avance d'une case")
+        mouv(pini,pfin,n,"p")
+        return True
+    if pini[0]+2==pfin[0] and pini[1]==pfin[1] and piece[postovalue(pini)]["moved?"]==False:
+        print("avance de deux case")
+        mouv(pini,pfin,n,"p")
+        return True
+    else:
+        return False
+
+def mouvroi(pini,pfin):
+    if abs(pini[0]-pfin[0])<=1 and abs(pini[1]-pfin[1])<=1 and not(abs(pini[0]-pfin[0])==0 and abs(pini[1]-pfin[1])==0):
+        print("avance le roi")
+        mouv(pini,pfin,"","r")
+        return True
+    if pini[0]==pfin[0] and pini[1]-pfin[1]==2 and piece[tour+"r"]["moved?"]==False and piece[tour+"t1"]["moved?"]==False and postovalue([pini[0],pini[1]-1])=="" and postovalue([pini[0],pini[1]-2])=="": #vers la gauche
+        print("roque a gauche")
+        mouv(valuetopos(tour+"t1"),[valuetopos(tour+"t1")[0],valuetopos(tour+"t1")[1]+2],1,"r")
+        mouv(pini,pfin,"","r")
+        return True
+    if pini[0]==pfin[0] and pini[1]-pfin[1]==-2 and piece[tour+"r"]["moved?"]==False and piece[tour+"t2"]["moved?"]==False and postovalue([pini[0],pini[1]+1])=="" and postovalue([pini[0],pini[1]+2])=="": #vers la droite
+        print("roque a droite")
+        mouv(valuetopos(tour+"t2"),[valuetopos(tour+"t2")[0],valuetopos(tour+"t1")[1]-2],2,"r")
+        mouv(pini,pfin,"","r")
+        return True
+    return False
+
+def mouvqueen(pini,pfin):
+    side = wichside(pini,pfin) # detection du cote
+    
+    if side == "d":
+        for i in range(pini[1]+1,pfin[1]+1):
+            if not(verif([pini[0],i])):
+                print(str(pini[0])+" , " + str(i) + " legal")
+                continue
+            print(str(pini[0])+" , " + str(i) + " Illegal")            
+            return False
+
+    if side == "g":
+        for i in range(pfin[1],pini[1]):
+            if not(verif([pini[0],i])):
+                print(str(pini[0])+" , " + str(i) + " legal")
+                continue
+            print(str(pini[0])+" , " + str(i) + " Illegal")            
+            return False
+
+    if side == "h":
+        for i in range(pfin[0],pini[0]):
+            if not(verif([i,pini[1]])):
+                print(str(i)+" , " + str(pini[1]) + " legal")
+                continue
+            print(str(i)+" , " + str(pini[1]) + " Illegal")            
+            return False
+
+    if side == "b":
+        for i in range(pini[0]+1,pfin[0]+1):
+            if not(verif([i,pini[0]])):
+                print(str(i)+" , " + str(pini[0]) + " legal")
+                continue
+            print(str(i)+" , " + str(pini[0]) + " Illegal")            
+            return False
+
+    if side == "bd":
+        if abs(pini[0]-pini[1])!=abs(pfin[0]-pfin[1]):
+            return False
+        for i in range(pini[0]+1,pfin[0]+1):
+            for k in range(pini[1]+1,pfin[1]+1):
+                if abs(i-k)!=abs(pini[0]-pini[1]):
+                    continue
+                if not(verif([i,k])):
+                    print(str(i)+" , " + str(k) + " legal")
+                    continue
+                print(str(i)+" , " + str(k) + " Illegal")
+
+    if side == "hg":
+        if abs(pini[0]-pini[1])!=abs(pfin[0]-pfin[1]):
+            return False
+        for i in range(pfin[0],pini[0]):
+            for k in range(pfin[1],pini[1]):
+                if abs(i-k)!=abs(pini[0]-pini[1]):
+                    continue
+                if not(verif([i,k])):
+                    print(str(i)+" , " + str(k) + " legal")
+                    continue
+                print(str(i)+" , " + str(k) + " Illegal")
+        
+    if side == "hd":
+        if abs(pini[0]+pini[1])!=abs(pfin[0]+pfin[1]):
+            return False
+        for i in range(pfin[0],pini[0]):
+            for k in range(pini[1]+1,pfin[1]+1):
+                if abs(i+k)!=abs(pini[0]+pini[1]):
+                    continue
+                if not(verif([i,k])):
+                    print(str(i)+" , " + str(k) + " legal")
+                    continue
+                print(str(i)+" , " + str(k) + " Illegal")
+
+    if side == "bg":
+        if abs(pini[0]+pini[1])!=abs(pfin[0]+pfin[1]):
+            return False
+        for i in range(pini[0]+1,pfin[0]+1):
+            for k in range(pfin[1],pini[1]):
+                if abs(i+k)!=abs(pini[0]+pini[1]):
+                    continue
+                if not(verif([i,k])):
+                    print(str(i)+" , " + str(k) + " legal")
+                    continue
+                print(str(i)+" , " + str(k) + " Illegal")
+
+    mouv(pini,pfin,"","q")
     return True
 
 def deplacer(pini,pfin): # return false si le mouvement est impossible pini et pfin systeme de liste 1*1 a 8*8
@@ -239,9 +358,7 @@ def deplacer(pini,pfin): # return false si le mouvement est impossible pini et p
 
 
 
-
 if __name__ == "__main__":
-
     for line in game : print(line)
     deplacer([5,0],[3,2])
     print("\n")
