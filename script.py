@@ -8,7 +8,7 @@ game = [
     ["","","","","","","",""],                 # c cavalier 1 et 2               3
     ["","","","","","","",""],                 # f fou 1 et 2                    4
     ["","","","","","","",""],                 # r roi                           5
-    ["wt1","","","","","","","wt2"],                 # q reine                         6
+    ["wf1","","","","","","",""],                 # q reine                         6
     ["wp1","wp2","wp3","wp4","wp5","wp6","wp7","wp8"], # b noir                  7
     ["wt1","wc1","wf1","wq","wr","wf2","wc2","wt2"]  # w blanc                   8
 ]
@@ -17,34 +17,38 @@ piece = {}
 tour="w" # defini le début du tour au blanc
 nottour="b"
 
+ligne=-1
 for line in game:  #definir les position des piece
+    ligne+=1
+    collone=-1
     for p in line:
+        collone+=1
         if "p" in p:
             piece[p]={
-                "position":2,
+                "position":[ligne,collone],
                 "moved?":False
             }
         if "t" in p:
             piece[p]={
-                "position":2,
+                "position":[ligne,collone],
                 "moved?":False
             }
         if "c" in p:
             piece[p]={
-                "position":2
+                "position":[ligne,collone]
             }
         if "f" in p:
             piece[p]={
-                "position":2
+                "position":[ligne,collone]
             }
         if "r" in p:
             piece[p]={
-                "position":2,
+                "position":[ligne,collone],
                 "moved?":False
             }
         if "q" in p:
             piece[p]={
-                "position":2
+                "position":[ligne,collone]
             }
         else:
             pass
@@ -52,6 +56,14 @@ for line in game:  #definir les position des piece
 
 def postovalue(pos):
     return game[pos[0]][pos[1]]
+
+def valuetopos(value):
+    return piece[value]["position"]
+
+def updatedico(pini,pfin):
+    piece=postovalue(pini)
+    piece[piece]["position"] = pfin
+    piece[piece]["moved?"] = True
 
 def wichside(pini,pfin):                     #8 cas differend   hg h hd
     if pini[0]==pfin[0] and pini[1]<pfin[1]: # meme ligne        g P  d
@@ -63,13 +75,13 @@ def wichside(pini,pfin):                     #8 cas differend   hg h hd
     if pini[1]==pfin[1] and pini[0]>pfin[0]:
         return "h"
     if pini[0]>pfin[0] and pini[1]>pfin[1]:
-        return "hd"
-    if pini[0]>pfin[0] and pini[1]<pfin[1]:
         return "hg"
+    if pini[0]>pfin[0] and pini[1]<pfin[1]:
+        return "hd"
     if pini[0]<pfin[0] and pini[1]<pfin[1]:
-        return "bg"
-    if pini[0]<pfin[0] and pini[1]>pfin[1]:
         return "bd"
+    if pini[0]<pfin[0] and pini[1]>pfin[1]:
+        return "bg"
 
 def verif(pos):# renvoie True si le mouv est impossible
     print(pos)
@@ -81,7 +93,6 @@ def verif(pos):# renvoie True si le mouv est impossible
 
 def mouvtour(pini,pfin,n):
     side = wichside(pini,pfin) # detection du cote
-    print(side)
     if side == "d":
         for i in range(pini[1]+1,pfin[1]+1):
             if not(verif([pini[0],i])):
@@ -114,18 +125,77 @@ def mouvtour(pini,pfin,n):
             print(str(i)+" , " + str(pini[0]) + " Illegal")            
             return False
 
+    updatedico(pini,pfin)
     game[pini[0]][pini[1]]="" # on enleve la piece
     game[pfin[0]][pfin[1]]=tour+"t"+str(n) # on remet la piece
-    
     return True
 
 def mouvcavalier(pini,pfin,n):
     if verif(pfin):
-        print(str(i)+" , " + str(pini[0]) + " Illegal")
+        print(str(pfin[0])+" , " + str(pfin[1]) + " Illegal")
         return False
-    print(str(i)+" , " + str(pini[0]) + " legal")
+    print(str(pfin[0])+" , " + str(pfin[1]) + " legal")
+
+    updatedico(pini,pfin)
     game[pini[0]][pini[1]]="" # on enleve la piece
     game[pfin[0]][pfin[1]]=tour+"c"+str(n) # on remet la piece
+    return True
+
+def mouvfou(pini,pfin,n):
+    side = wichside(pini,pfin) # detection du cote
+    print(side)
+    
+    if side == "bd":
+        if abs(pini[0]-pini[1])!=abs(pfin[0]-pfin[1]):
+            return False
+        for i in range(pini[0]+1,pfin[0]+1):
+            for k in range(pini[1]+1,pfin[1]+1):
+                if abs(i-k)!=abs(pini[0]-pini[1]):
+                    continue
+                if not(verif([i,k])):
+                    print(str(i)+" , " + str(k) + " legal")
+                    continue
+                print(str(i)+" , " + str(k) + " Illegal")
+
+    if side == "hg":
+        if abs(pini[0]-pini[1])!=abs(pfin[0]-pfin[1]):
+            return False
+        for i in range(pfin[0],pini[0]):
+            for k in range(pfin[1],pini[1]):
+                if abs(i-k)!=abs(pini[0]-pini[1]):
+                    continue
+                if not(verif([i,k])):
+                    print(str(i)+" , " + str(k) + " legal")
+                    continue
+                print(str(i)+" , " + str(k) + " Illegal")
+        
+    if side == "hd":
+        if abs(pini[0]+pini[1])!=abs(pfin[0]+pfin[1]):
+            return False
+        for i in range(pfin[0],pini[0]):
+            for k in range(pini[1]+1,pfin[1]+1):
+                if abs(i+k)!=abs(pini[0]+pini[1]):
+                    continue
+                if not(verif([i,k])):
+                    print(str(i)+" , " + str(k) + " legal")
+                    continue
+                print(str(i)+" , " + str(k) + " Illegal")
+
+    if side == "bg":
+        if abs(pini[0]+pini[1])!=abs(pfin[0]+pfin[1]):
+            return False
+        for i in range(pini[0]+1,pfin[0]+1):
+            for k in range(pfin[1],pini[1]):
+                if abs(i+k)!=abs(pini[0]+pini[1]):
+                    continue
+                if not(verif([i,k])):
+                    print(str(i)+" , " + str(k) + " legal")
+                    continue
+                print(str(i)+" , " + str(k) + " Illegal")
+
+    updatedico(pini,pfin)
+    game[pini[0]][pini[1]]="" # on enleve la piece
+    game[pfin[0]][pfin[1]]=tour+"f"+str(n) # on remet la piece
     return True
 
 def deplacer(pini,pfin): # return false si le mouvement est impossible pini et pfin systeme de liste 1*1 a 8*8
@@ -173,7 +243,10 @@ def deplacer(pini,pfin): # return false si le mouvement est impossible pini et p
 if __name__ == "__main__":
 
     for line in game : print(line)
-    deplacer([5,0],[6,0])
+    deplacer([5,0],[3,2])
+    print("\n")
+    for line in game : print(line)
+    deplacer([3,2],[5,0])
     print("\n")
     for line in game : print(line)
     #print(postovalue([7,7]))
