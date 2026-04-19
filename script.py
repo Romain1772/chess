@@ -356,16 +356,61 @@ def deplacer(pini,pfin): # return false si le mouvement est impossible pini et p
     if "q" in piece:
         return mouvqueen(pini,pfin)
 
+def printgame():
+    print("-"*18)
+    for line in game:
+        ligne="|"
+        for piece in line:
+            if "w" in piece:
+                    if "t" in piece:
+                        ligne=ligne+"♜ "
+                    if "c" in piece:
+                        ligne=ligne+"♞ "
+                    if "f" in piece:
+                        ligne=ligne+"♝ "
+                    if "p" in piece:
+                        ligne=ligne+"♟ "
+                    if "r" in piece:
+                        ligne=ligne+"♚ "
+                    if "q" in piece:
+                        ligne=ligne+"♛ "
+            elif "b" in piece:
+                    if "t" in piece:
+                        ligne=ligne+"♖ "
+                    if "c" in piece:
+                        ligne=ligne+"♘ "
+                    if "f" in piece:
+                        ligne=ligne+"♗ "
+                    if "p" in piece:
+                        ligne=ligne+"♙ "
+                    if "r" in piece:
+                        ligne=ligne+"♔ "
+                    if "q" in piece:
+                        ligne=ligne+"♕ "
+            else:
+                ligne=ligne+"  "
+        print(ligne+" "*(17-len(ligne)) +"|")
+    print("-"*18)
+
+def ask():
+    input("Quel piece ?")
+    input("Ou?")
+
+def main():
+    
+    while winner==False:
+        pass
+        
 
 
 if __name__ == "__main__":
-    for line in game : print(line)
+    printgame()
     deplacer([5,0],[3,2])
     print("\n")
-    for line in game : print(line)
+    printgame()
     deplacer([3,2],[5,0])
     print("\n")
-    for line in game : print(line)
+    printgame()
     #print(postovalue([7,7]))
     #for line in game : print(line)
     #print(piece)
