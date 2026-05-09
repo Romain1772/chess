@@ -132,14 +132,12 @@ def mouvtour(pini,pfin,n):
     return True
 
 def mouvcavalier(pini,pfin,n):
-    if verif(pfin):
+    if verif(pfin) or (pfin[0]-pini[0])**2+(pfin[1]-pini[1])**2!=5:
         print(str(pfin[0])+" , " + str(pfin[1]) + " Illegal")
         return False
     print(str(pfin[0])+" , " + str(pfin[1]) + " legal")
 
-    updatedico(pini,pfin)
-    game[pini[0]][pini[1]]="" # on enleve la piece
-    game[pfin[0]][pfin[1]]=tour+"c"+str(n) # on remet la piece
+    mouv(pini,pfin,n,"c")
     return True
 
 def mouvfou(pini,pfin,n):
@@ -357,9 +355,11 @@ def deplacer(pini,pfin): # return false si le mouvement est impossible pini et p
         return mouvqueen(pini,pfin)
 
 def printgame():
-    print("-"*18)
+    print("--a-b-c-d-e-f-g-h--")
+    nligne=8
     for line in game:
-        ligne="|"
+        ligne=f"{nligne}|"
+        nligne-=1
         for piece in line:
             if "w" in piece:
                     if "t" in piece:
@@ -393,24 +393,33 @@ def printgame():
     print("-"*18)
 
 def ask():
-    input("Quel piece ?")
-    input("Ou?")
+    x = input("Quel piece ?")
+    y = input("Ou?")
+    return (x,y)
 
 def main():
-    
+    winner = False
     while winner==False:
-        pass
-        
+        printgame()
+        moov = ask()
+        if deplacer(valuetopos(moov[0]),int(moov[1]))==False:
+            print("Coup invalide !")
+            continue
+        tour, nottour = nottour, tour
+    
+    printgame()
+    print(f"Les {nottour} gagne !")
 
 
 if __name__ == "__main__":
-    printgame()
-    deplacer([5,0],[3,2])
-    print("\n")
-    printgame()
-    deplacer([3,2],[5,0])
-    print("\n")
-    printgame()
+    main()
+    #printgame()
+    #deplacer([5,0],[3,2])
+    #print("\n")
+    #printgame()
+    #deplacer([3,2],[5,0])
+    #print("\n")
+    #printgame()
     #print(postovalue([7,7]))
     #for line in game : print(line)
     #print(piece)
