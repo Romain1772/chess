@@ -60,6 +60,23 @@ def postovalue(pos):
 def valuetopos(value):
     return piece[value]["position"]
 
+def chesstogame(ch):
+    v1=0
+    for i in ["a","b","c","d","e","f","g","h"]:
+        if ch[0] == i:
+            break
+        v1+=1
+    v2=0
+    for i in ["8","7","6","5","4","3","2","1"]:
+        if ch[1] == i:
+            break
+        v2+=1
+    return [v2,v1]
+
+def gametochess(pos):
+    '''a faire au besoin'''
+    pass
+
 def updatedico(pini,pfin):
     p=postovalue(pini)
     piece[p]["position"] = pfin
@@ -89,10 +106,12 @@ def verif(pos):# renvoie True si le mouv est impossible
     elif nottour in game[pos[0]][pos[1]]: return False
     else: return True
 
-def mouv(pini,pfin,n,piece):
+def mouv(pini,pfin,n,name):
     updatedico(pini,pfin)
+    if game[pini[0]][pini[1]] != "":
+        del piece[game[pini[0]][pini[1]]]
     game[pini[0]][pini[1]]="" # on enleve la piece
-    game[pfin[0]][pfin[1]]=tour+piece+str(n) # on remet la piece
+    game[pfin[0]][pfin[1]]=tour+name+str(n) # on remet la piece
 
 def mouvtour(pini,pfin,n):
     side = wichside(pini,pfin) # detection du cote
@@ -196,21 +215,65 @@ def mouvfou(pini,pfin,n):
     return True
 
 def mouvpion(pini,pfin,n):
+    def promo():
+        if pfin[0]==0 or pfin[0]==7:
+            npiece=input("Vers quel piece promouvoir?(f/q/t/c)")
+            maxx=0
+            for i in piece:
+                if npiece in i and tour in i:
+                    try:
+                        if maxx<i[3]:
+                            maxx=i[3]
+                    except:
+                        pass
 
-    if ((pini[1]+1==pfin[1] and pini[0]+1==pfin[0]) or (pini[1]-1==pfin[1] and pini[0]+1==pfin[0])) and (nottour in postovalue(pfin)):
-        print("mange la piece en diagonale")
-        mouv(pini,pfin,n,"p")
-        return True
-    if pini[0]+1==pfin[0] and pini[1]==pfin[1]:
-        print("avance d'une case")
-        mouv(pini,pfin,n,"p")
-        return True
-    if pini[0]+2==pfin[0] and pini[1]==pfin[1] and piece[postovalue(pini)]["moved?"]==False:
-        print("avance de deux case")
-        mouv(pini,pfin,n,"p")
-        return True
+            del piece[game[pfin[0]][pfin[1]]]
+
+            game[pfin[0]][pfin[1]]=tour+npiece+str(maxx+1)
+
+            
+            p=postovalue(pfin)
+            piece[p]["position"] = pfin
+            piece[p]["moved?"] = True
+                            
+
+            
+    if tour == "b":
+        if ((pini[1]+1==pfin[1] and pini[0]+1==pfin[0]) or (pini[1]-1==pfin[1] and pini[0]+1==pfin[0])) and (nottour in postovalue(pfin)):
+            print("mange la piece en diagonale")
+            mouv(pini,pfin,n,"p")
+            promo()
+            return True
+        if pini[0]+1==pfin[0] and pini[1]==pfin[1] and postovalue(pfin,pfin[1])=="":
+            print("avance d'une case")
+            mouv(pini,pfin,n,"p")
+            promo()
+            return True
+        if pini[0]+2==pfin[0] and pini[1]==pfin[1] and postovalue(pfin[0]-1,pfin[1])=="" and piece[postovalue(pini)]["moved?"]==False and postovalue(pfin)=="":
+            print("avance de deux case")
+            mouv(pini,pfin,n,"p")
+            promo()
+            return True
+        else:
+            return False
     else:
-        return False
+        if ((pini[1]-1==pfin[1] and pini[0]+1==pfin[0]) or (pini[1]+1==pfin[1] and pini[0]+1==pfin[0])) and (nottour in postovalue(pfin)):
+            print("mange la piece en diagonale")
+            mouv(pini,pfin,n,"p")
+            promo()
+            return True
+        if pini[0]-1==pfin[0] and pini[1]==pfin[1] and postovalue(pfin,pfin[1])=="":
+            print("avance d'une case")
+            mouv(pini,pfin,n,"p")
+            promo()
+            return True
+        if pini[0]-2==pfin[0] and pini[1]==pfin[1] and postovalue(pfin[0]+1,pfin[1])=="" and piece[postovalue(pini)]["moved?"]==False and postovalue(pfin)=="":
+            print("avance de deux case")
+            mouv(pini,pfin,n,"p")
+            promo()
+            return True
+        else:
+            return False
 
 def mouvroi(pini,pfin):
     if abs(pini[0]-pfin[0])<=1 and abs(pini[1]-pfin[1])<=1 and not(abs(pini[0]-pfin[0])==0 and abs(pini[1]-pfin[1])==0):
@@ -393,16 +456,18 @@ def printgame():
     print("-"*18)
 
 def ask():
-    x = input("Quel piece ?")
-    y = input("Ou?")
+    x = input("De ?")
+    y = input("A ?")
     return (x,y)
 
 def main():
+    global tour
+    global nottour
     winner = False
     while winner==False:
         printgame()
         moov = ask()
-        if deplacer(valuetopos(moov[0]),int(moov[1]))==False:
+        if deplacer(chesstogame(moov[0]),chesstogame(moov[1]))==False:
             print("Coup invalide !")
             continue
         tour, nottour = nottour, tour
