@@ -89,7 +89,18 @@ def adder(pos,xadd,yadd):
 def multi(pos,coef):
     return (pos[0]*coef,pos[1]*coef)
 
-def mouv(pini,pfin,n,name):
+def maxn(t,name):
+    max=1
+    for i in dicoPiece.keys():
+        if t in i and name in i:
+            try:
+                if int(i[2])>max:
+                    max=int(i[2])
+            except:
+                pass
+    return max
+
+def mouv(pini,pfin,n,name,real=True):
     dif=pfin[1]-pini[1]
     if name=="r" and abs(dif)>1:#cas du roque
         if dif<0:#vers la gauche
@@ -97,11 +108,32 @@ def mouv(pini,pfin,n,name):
         else:
             mouv(valuetopos(tour+"t2"),(pini[0],pini[1]+1),1,"t")
     updatedico(pini,pfin)
+    if real and name=="p" and (pfin[0]==0 or pfin[0]==7):#cas de la promotion
+        del dicoPiece[game[pfin[0]][pfin[1]]]
+        game[pini[0]][pini[1]]=""
+        name=input("Quel piece est promu?(q/c/f/t)")
+        n=maxn(tour,name)+1
+        game[pfin[0]][pfin[1]]=tour+name+str(n)
+        dicoPiece[tour+name+str(n)]["position"] = pfin
+        dicoPiece[tour+name+str(n)]["moved?"] = True
+        return
+    dif=pfin[0]-pini[0]
+    if real and name == "p" and abs(dif)==2:#avance de deux case par pion
+        if dif<0:#blanc
+            game[pini[0]-1][pini[1]]="."
+        else:
+            game[pini[0]+1][pini[1]]="."
+    
+    if postovalue(pfin)==".":#prise en passant
+        del dicoPiece[game[pini[0]][pfin[1]]]
+        game[pini[0]][pfin[1]]=""
+
     if game[pfin[0]][pfin[1]] != "":
         del dicoPiece[game[pfin[0]][pfin[1]]]
     game[pini[0]][pini[1]]="" # on enleve la piece
     if n==False: n=""
     game[pfin[0]][pfin[1]]=tour+name+str(n) # on remet la piece
+    
 
 def coupPossible(pini):
     piece = postovalue(pini)
@@ -119,7 +151,7 @@ def coupPossible(pini):
             pos=adder(pini,i[0],i[1])
             if horsBoard(pos):
                 pTest=postovalue(pos)
-                if "" == pTest or tmpNotTour in pTest:
+                if "" == pTest or tmpNotTour in pTest or "."==pTest:
                     cpPossible.append(pos)
             else:
                 pass
@@ -132,7 +164,7 @@ def coupPossible(pini):
                 pos=adder(pini,vect[0],vect[1])
                 if horsBoard(pos):
                     pTest=postovalue(pos)
-                    if "" == pTest:
+                    if "" == pTest or "."==pTest:
                         cpPossible.append(pos)
                     elif tmpNotTour in pTest:
                         cpPossible.append(pos)
@@ -150,7 +182,7 @@ def coupPossible(pini):
                 pos=adder(pini,vect[0],vect[1])
                 if horsBoard(pos):
                     pTest=postovalue(pos)
-                    if "" == pTest:
+                    if "" == pTest or "."==pTest:
                         cpPossible.append(pos)
                     elif tmpNotTour in pTest:
                         cpPossible.append(pos)
@@ -162,7 +194,7 @@ def coupPossible(pini):
     if "r" in piece:
         for i in [adder(pini,0,1),adder(pini,0,-1),adder(pini,-1,0),adder(pini,1,0),adder(pini,1,1),adder(pini,-1,-1),adder(pini,1,-1),adder(pini,-1,1)]:
             if horsBoard(pos):#au cas ou hors du board
-                if tmpNotTour in postovalue(i) or "" == postovalue(i):
+                if tmpNotTour in postovalue(i) or "" == postovalue(i) or "." ==postovalue(i):
                     cpPossible.append(i)
             else:
                 pass
@@ -179,17 +211,22 @@ def coupPossible(pini):
         if tmpTour=="b":
             for i in posEv[0:2]:
                 if horsBoard(pos):
-                    if "w" in postovalue(i):
+                    if "w" in postovalue(i) or "."==pTest:
                         cpPossible.append(i)
                 else:
                     pass
         if tmpTour=="w":
             for i in posEv[2:4]:
                 if horsBoard(pos):
-                    if "b" in postovalue(i):
+                    if "b" in postovalue(i) or "."==pTest:
                         cpPossible.append(i)
                 else:
                     pass
+        if dicoPiece[piece]["moved?"]==False:
+            if tmpTour=="w":
+                cpPossible.append(adder(pini,-2,0))
+            if tmpTour=="b":
+                cpPossible.append(adder(pini,2,0))
 
         if "" == postovalue(adder(pini,1,0)) and "b" in piece :
             cpPossible.append(adder(pini,1,0))
@@ -197,6 +234,12 @@ def coupPossible(pini):
             cpPossible.append(adder(pini,-1,0))
     return cpPossible
 
+def removePoint():
+    global game
+    for i in range(0,8):
+        if game[2][i]==".": game[1][i]==""
+    for i in range(0,8):
+        if game[5][i]==".": game[6][i]==""
 
 def ischeck(t,posRoi=False):
     '''t -> b/w la personne qui doit etre vérifié, es que t est en echec? retourne true (echec) / false (pas echec)'''
@@ -209,6 +252,51 @@ def ischeck(t,posRoi=False):
                 return True
     return False
 
+def ismate(t):
+    '''t -> b/w la personne qui doit etre vérifié, es que t est en echec et mat? retourne true (echec) / false (pas echec)'''
+    global game
+    global dicoPiece
+    posRoi=valuetopos(t+"r")
+    if ischeck(t):
+        for i in list(dicoPiece.keys()):
+            if t in i:
+                for k in coupPossible(valuetopos(i)):
+                    try:
+                        n=i[2]
+                    except:
+                        n=False
+                    tempGame=copy.deepcopy(game)
+                    tempdicoPiece=copy.deepcopy(dicoPiece)
+                    mouv(valuetopos(i),k,n,i[1],False)
+                    test = ischeck(t)
+                    game = copy.deepcopy(tempGame)
+                    dicoPiece=copy.deepcopy(tempdicoPiece)
+                    if test==False: return False
+        return True
+    return False
+
+def ispat(t):
+    ''' '''
+    global game
+    global dicoPiece
+    posRoi=valuetopos(t+"r")
+    if not(ischeck(t)):
+        for i in list(dicoPiece.keys()):
+            if t in i:
+                for k in coupPossible(valuetopos(i)):
+                    try:
+                        n=i[2]
+                    except:
+                        n=False
+                    tempGame=copy.deepcopy(game)
+                    tempdicoPiece=copy.deepcopy(dicoPiece)
+                    mouv(valuetopos(i),k,n,i[1],False)
+                    test = ischeck(t)
+                    game = copy.deepcopy(tempGame)
+                    dicoPiece=copy.deepcopy(tempdicoPiece)
+                    if test==False: return False
+        return True
+    return False
 
 def deplacer(pini,pfin): # return false si le mouvement est impossible pini et pfin systeme de liste 1*1 a 8*8
     global game
@@ -292,9 +380,18 @@ def main():
             print("Coup invalide !")
             continue
         tour, nottour = nottour, tour
-    
+        pat=ispat(tour)
+        if pat!=False:
+            if pat=="b":
+                print(f"Les noirs sont en pat !")
+            else:
+                print(f"Les blanc sont en pat !")
+            break
+        if ismate(tour):
+            print(f"Les {nottour} gagne !")
+            break
+        removePoint()
     printgame()
-    print(f"Les {nottour} gagne !")
 
 
 if __name__ == "__main__":
